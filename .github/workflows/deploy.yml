@@ -40,7 +40,7 @@ jobs:
         run: |
           docker build \
             -t us-central1-docker.pkg.dev/${{ secrets.PROJECT_ID }}/app-repo/demo-app:${{ github.sha }} \
-            ./app
+            ./apps
 
 
       - name: Push Image
