@@ -1,172 +1,58 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+name: Deploy to Cloud Run
 
-<title>Website Under Maintenance</title>
+on:
+  push:
+    branches:
+      - main
 
-<style>
+permissions:
+  contents: read
+  id-token: write
 
-body{
-    margin:0;
-    font-family:Arial, sans-serif;
-    background:linear-gradient(135deg,#0f172a,#334155);
-    color:white;
-    text-align:center;
-}
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
 
-.container{
-    min-height:100vh;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    padding:20px;
-}
+    steps:
 
-.card{
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    background:rgba(255,255,255,0.1);
-    padding:50px 40px;
-    border-radius:20px;
-    width:400px;
-    box-shadow:0 10px 30px rgba(0,0,0,0.3);
 
-}
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.SERVICE_ACCOUNT }}
+          project_id: ${{ secrets.PROJECT_ID }}
 
 
-.icon{
+      - name: Setup GCloud
+        uses: google-github-actions/setup-gcloud@v2
 
-    font-size:70px;
-    margin-bottom:20px;
 
-}
+      - name: Configure Docker
+        run: |
+          gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
 
 
-h1{
+      - name: Build Image
+        run: |
+          docker build \
+            -t us-central1-docker.pkg.dev/${{ secrets.PROJECT_ID }}/app-repo/demo-app:${{ github.sha }} \
+            ./apps
 
-    font-size:38px;
-    margin-bottom:15px;
 
-}
+      - name: Push Image
+        run: |
+          docker push \
+            us-central1-docker.pkg.dev/${{ secrets.PROJECT_ID }}/app-repo/demo-app:${{ github.sha }}
 
 
-p{
-
-    font-size:18px;
-    line-height:1.6;
-    color:#e2e8f0;
-
-}
-
-
-.status{
-
-    margin-top:30px;
-    padding:15px;
-    background:#f59e0b;
-    border-radius:10px;
-    font-weight:bold;
-    font-size:18px;
-
-}
-
-
-.footer{
-
-    margin-top:30px;
-    font-size:14px;
-    color:#cbd5e1;
-
-}
-
-
-button{
-
-    margin-top:25px;
-    padding:12px 25px;
-    border:none;
-    border-radius:8px;
-    background:#22c55e;
-    color:white;
-    font-size:16px;
-    cursor:pointer;
-
-}
-
-
-button:hover{
-
-    background:#16a34a;
-
-}
-
-</style>
-
-</head>
-
-
-<body>
-
-
-<div class="container">
-
-<div class="card">
-
-
-<div class="icon">
-🛠️
-</div>
-
-
-<h1>
-Website Under Maintenance
-</h1>
-
-
-<p>
-We are currently performing some improvements 
-to provide you with a better experience.
-</p>
-
-
-<div class="status">
-
-⏳ Maintenance In Progress
-
-</div>
-
-
-<p>
-
-Our team is working on updates and improvements.
-<br>
-Please check back soon.
-
-</p>
-
-
-<button>
-
-Thank You For Your Patience
-
-</button>
-
-
-<div class="footer">
-
-© 2026 Your Company Name  
-<br>
-All Rights Reserved
-
-</div>
-
-
-</div>
-
-</div>
-
-
-</body>
-
-</html>
+      - name: Deploy Cloud Run
+        run: |
+          gcloud run deploy demo-app \
+            --image us-central1-docker.pkg.dev/${{ secrets.PROJECT_ID }}/app-repo/demo-app:${{ github.sha }} \
+            --region us-central1 \
+            --platform managed \
+            --allow-unauthenticated
