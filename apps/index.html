@@ -1,58 +1,95 @@
-name: Deploy to Cloud Run
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevOps CI/CD Demo</title>
 
-on:
-  push:
-    branches:
-      - main
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            color: white;
+            text-align: center;
+        }
 
-permissions:
-  contents: read
-  id-token: write
+        .container {
+            padding: 80px 20px;
+        }
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
+        .card-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 40px;
+        }
 
-    steps:
+        .card {
+            background: rgba(255, 255, 255, .08);
+            padding: 20px;
+            width: 220px;
+            border-radius: 10px;
+        }
 
-      - name: Checkout
-        uses: actions/checkout@v4
+        .success {
+            color: #22c55e;
+            font-size: 24px;
+            font-weight: bold;
+            margin-top: 40px;
+        }
 
+        button {
+            padding: 15px 25px;
+            font-size: 18px;
+            border: none;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
 
-      - name: Authenticate to GCP
-        uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
-          service_account: ${{ secrets.SERVICE_ACCOUNT }}
-          project_id: ${{ secrets.PROJECT_ID }}
+<body>
+    <div class="container">
+        <h1>GCP DevOps Project</h1>
+        <h2>Terraform + Docker + GitHub Actions + Cloud Run</h2>
 
+        <div class="card-container">
+            <div class="card">
+                <h3>Terraform</h3>
+                <p>Infrastructure as Code</p>
+            </div>
 
-      - name: Setup GCloud
-        uses: google-github-actions/setup-gcloud@v2
+            <div class="card">
+                <h3>GitHub Actions</h3>
+                <p>CI/CD Automation</p>
+            </div>
 
+            <div class="card">
+                <h3>Docker</h3>
+                <p>Containerized Deployment</p>
+            </div>
 
-      - name: Configure Docker
-        run: |
-          gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+            <div class="card">
+                <h3>Cloud Run</h3>
+                <p>Serverless Hosting</p>
+            </div>
+        </div>
 
+        <div class="success">
+            ✅Deployment Successful
+        </div>
 
-      - name: Build Image
-        run: |
-          docker build \
-            -t us-central1-docker.pkg.dev/${{ secrets.PROJECT_ID }}/app-repo/demo-app:${{ github.sha }} \
-            ./apps
+        <p>
+            Infrastructure Provisioned by Terraform<br>
+            Container Built by Docker<br>
+            Deployment Automated by GitHub Actions
+        </p>
 
-
-      - name: Push Image
-        run: |
-          docker push \
-            us-central1-docker.pkg.dev/${{ secrets.PROJECT_ID }}/app-repo/demo-app:${{ github.sha }}
-
-
-      - name: Deploy Cloud Run
-        run: |
-          gcloud run deploy demo-app \
-            --image us-central1-docker.pkg.dev/${{ secrets.PROJECT_ID }}/app-repo/demo-app:${{ github.sha }} \
-            --region us-central1 \
-            --platform managed \
-            --allow-unauthenticated
+        <button>
+            CI/CD Pipeline Completed Successfully
+        </button>
+    </div>
+</body>
+</html>
