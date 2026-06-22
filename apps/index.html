@@ -31,23 +31,23 @@ jobs:
           service_account: ${{ secrets.SERVICE_ACCOUNT }}
 
 
-      - name: Setup GCloud
+            - name: Setup GCloud
         uses: google-github-actions/setup-gcloud@v2
-
-
-      - name: Verify GCP Auth
-        run: |
-          gcloud auth list
-          gcloud config list
-
 
       - name: Configure Docker
         run: |
           gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
 
+      - name: Docker Login
+        run: |
+          gcloud auth print-access-token | docker login \
+          -u oauth2accesstoken \
+          --password-stdin \
+          https://us-central1-docker.pkg.dev
 
       - name: Set Variables
         run: |
+          echo "BRANCH_NAME=${{ github.ref_name }}" >> $GITHUB_ENV
           echo "IMAGE_NAME=demo-app-${{ github.ref_name }}" >> $GITHUB_ENV
           echo "SERVICE_NAME=demo-app-${{ github.ref_name }}" >> $GITHUB_ENV
 
